@@ -43,8 +43,8 @@ class _FavoriteScreenState extends ConsumerState<FavoriteScreen> {
             ),
           ),
         ),
-        body: const TabBarView(
-          physics: BouncingScrollPhysics(),
+        body: TabBarView(
+          physics: const BouncingScrollPhysics(),
           children: [FavoriteFollowing(), FavoriteYou()],
         ),
       ),

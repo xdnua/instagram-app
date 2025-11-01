@@ -20,6 +20,7 @@ class RouteName {
 
   // reels
   static const reels = 'reels';
+  static const uploadReel = 'uploadReel';
 
   // edit profile
   static const editProfile = 'editProfile';

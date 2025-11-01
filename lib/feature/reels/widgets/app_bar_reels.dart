@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:instagram_app/base/dependency/app_service.dart';
+import 'package:instagram_app/base/dependency/router/utils/route_input.dart';
 import 'package:instagram_app/constants/colors.dart';
 import 'package:instagram_app/shared/build/gen/assets.gen.dart';
 import 'package:instagram_app/shared/widgets/appbar/app_bar_widget.dart';
@@ -12,6 +13,7 @@ class AppBarReels extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, ref) {
     final localization = ref.watch(AppService.localization);
+    final router = ref.read(AppService.router);
     return AppBarWidget(
       backgroundColor: ColorConstants.transparent,
       leading: IconButton(
@@ -31,7 +33,12 @@ class AppBarReels extends ConsumerWidget implements PreferredSizeWidget {
       actions: [
         Assets.svgs.icSearch.svg(color: ColorConstants.backgroundWhite),
         const SizedBox(width: 18),
-        Assets.svgs.icAdd.svg(color: ColorConstants.backgroundWhite),
+        IconButton(
+          onPressed: () {
+            router.push(RouteInput.uploadReel());
+          },
+          icon: Assets.svgs.icAdd.svg(color: ColorConstants.backgroundWhite),
+        ),
         const SizedBox(width: 12),
       ],
     );

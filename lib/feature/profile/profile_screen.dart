@@ -48,18 +48,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget build(BuildContext context) {
     final routerService = ref.watch(AppService.router);
     final localization = ref.watch(AppService.localization);
-    final user = ProfileData.user;
     final isGrid = _currentIndex == 0;
 
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBarProfile(title: user.username),
+        appBar: AppBarProfile(),
         body: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ProfileUserInfo(user: user),
+              ProfileUserInfo(),
               Padding(
                 padding: EdgeInsetsConstants.all16,
                 child: AppTextButton(

@@ -3,17 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:instagram_app/constants/edge_insets.dart';
 import 'package:instagram_app/shared/build/gen/assets.gen.dart';
 import 'package:instagram_app/shared/providers/end_drawer_provider.dart';
+import 'package:instagram_app/shared/providers/user_provider.dart';
 import 'package:instagram_app/shared/widgets/appbar/app_bar_widget.dart';
 import 'package:instagram_app/shared/widgets/text/app_text_style.dart';
 
 class AppBarProfile extends ConsumerWidget implements PreferredSizeWidget {
-  const AppBarProfile({super.key, required this.title});
-
-  final String title;
+  const AppBarProfile({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
     final openDrawer = ref.read(drawerProvider);
+    final user = ref.watch(userProvider);
 
     return AppBarWidget(
       title: Row(
@@ -23,7 +23,7 @@ class AppBarProfile extends ConsumerWidget implements PreferredSizeWidget {
           Padding(
             padding: EdgeInsetsConstants.horizontal4,
             child: Text(
-              title,
+              user.username,
               style: AppTextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),

@@ -15,6 +15,8 @@ class RoutePage {
         return RouteScreen.storyPageRoute(settings);
       case RouteName.reels:
         return RouteScreen.reelsPageRoute(settings);
+      case RouteName.uploadReel:
+        return RouteScreen.uploadReelPageRoute(settings);
       case RouteName.editProfile:
         return RouteScreen.editProfilePageRoute(settings);
     }

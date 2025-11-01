@@ -6,6 +6,7 @@ import 'package:instagram_app/feature/home/home_screen.dart';
 import 'package:instagram_app/feature/post/post_screen.dart';
 import 'package:instagram_app/feature/profile/profile_screen.dart';
 import 'package:instagram_app/feature/reels/reels_screen.dart';
+import 'package:instagram_app/feature/reels/widgets/upload_reel_screen.dart';
 import 'package:instagram_app/feature/root/root_screen.dart';
 import 'package:instagram_app/feature/search/search_screen.dart';
 import 'package:instagram_app/feature/splash/splash_screen.dart';
@@ -86,6 +87,13 @@ class RouteScreen {
     return MaterialPageRoute(
       settings: settings,
       builder: (_) => const ReelsScreen(),
+    );
+  }
+
+  static PageRoute uploadReelPageRoute(RouteSettings settings) {
+    return MaterialPageRoute(
+      settings: settings,
+      builder: (_) => const UploadReelScreen(),
     );
   }
 

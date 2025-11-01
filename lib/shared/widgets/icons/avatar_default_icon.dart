@@ -8,7 +8,7 @@ class AvatarDefaultIcon extends StatelessWidget {
   const AvatarDefaultIcon({
     super.key,
     this.width,
-    this.assetName = 'avatar_default',
+    this.assetName = 'assets/images/Instagram_Logo.png',
   });
 
   @override

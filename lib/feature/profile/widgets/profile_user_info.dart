@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:instagram_app/base/dependency/app_service.dart';
 import 'package:instagram_app/constants/edge_insets.dart';
-import 'package:instagram_app/feature/profile/models/user.dart';
-import 'package:instagram_app/shared/build/gen/assets.gen.dart';
+import 'package:instagram_app/feature/profile/models/user_profile.dart';
 import 'package:instagram_app/shared/build/gen_l10n/app_localizations.dart';
+import 'package:instagram_app/shared/providers/user_provider.dart';
+import 'package:instagram_app/shared/widgets/avatar/app_circle_avatar.dart';
 import 'package:instagram_app/shared/widgets/text/app_text_style.dart';
 
 class ProfileUserInfo extends ConsumerWidget {
-  const ProfileUserInfo({super.key, required this.user});
-
-  final User user;
+  const ProfileUserInfo({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
     final localization = ref.watch(AppService.localization);
+    final user = ref.watch(userProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -23,9 +23,9 @@ class ProfileUserInfo extends ConsumerWidget {
           padding: EdgeInsetsConstants.all12,
           child: Row(
             children: [
-              _buildAvatar(),
+              _buildAvatar(user.avatar),
               const SizedBox(width: 20),
-              Expanded(child: _buildStatistic(localization)),
+              Expanded(child: _buildStatistic(localization, user)),
               const SizedBox(width: 10),
             ],
           ),
@@ -34,14 +34,18 @@ class ProfileUserInfo extends ConsumerWidget {
           padding: EdgeInsetsConstants.horizontal16,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [_buildName(), const SizedBox(height: 1), _buildBio()],
+            children: [
+              _buildName(user.name),
+              const SizedBox(height: 1),
+              _buildBio(user.bio),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(String url) {
     return Container(
       width: 100,
       height: 100,
@@ -50,26 +54,31 @@ class ProfileUserInfo extends ConsumerWidget {
         borderRadius: BorderRadius.circular(48),
       ),
       child: Center(
-        child: AssetGenImage(user.avatar).image(width: 90, height: 90),
+        child: ClipOval(
+          child:
+              url.isNotEmpty
+                  ? AppCircleAvatar(url: url, width: 96, height: 96)
+                  : const Icon(Icons.person, size: 96),
+        ),
       ),
     );
   }
 
-  Widget _buildStatistic(AppLocalizations localization) {
+  Widget _buildStatistic(AppLocalizations localization, UserProfile user) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildStatisticItem(
           title: localization.post,
-          value: user.numberOfPosts,
+          value: user.postIds.length,
         ),
         _buildStatisticItem(
           title: localization.followers,
-          value: user.numberOfFollowers,
+          value: user.followerIds.length,
         ),
         _buildStatisticItem(
           title: localization.following,
-          value: user.numberOfFollowing,
+          value: user.followingIds.length,
         ),
       ],
     );
@@ -90,16 +99,16 @@ class ProfileUserInfo extends ConsumerWidget {
     );
   }
 
-  Widget _buildName() {
+  Widget _buildName(String name) {
     return Text(
-      user.name,
+      name,
       style: AppTextStyle(fontSize: 12, fontWeight: FontWeight.bold),
     );
   }
 
-  Widget _buildBio() {
+  Widget _buildBio(String bio) {
     return Text(
-      user.bio,
+      bio,
       style: AppTextStyle(
         fontSize: 12,
         fontWeight: FontWeight.normal,

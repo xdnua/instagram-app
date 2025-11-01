@@ -85,6 +85,7 @@ class _StoryScreenState extends State<StoryScreen> {
                 color:
                     index <= _currentIndex
                         ? Colors.white
+                        // ignore: deprecated_member_use
                         : Colors.white.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(10),
               ),

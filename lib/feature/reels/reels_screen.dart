@@ -1,8 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_app/constants/colors.dart';
 import 'package:instagram_app/feature/reels/widgets/app_bar_reels.dart';
 import 'package:instagram_app/feature/reels/widgets/reels_video_player.dart';
-import 'package:video_player/video_player.dart';
 
 class ReelsScreen extends StatefulWidget {
   const ReelsScreen({super.key});
@@ -12,50 +12,26 @@ class ReelsScreen extends StatefulWidget {
 }
 
 class _ReelsScreenState extends State<ReelsScreen> {
-  final _pageController = PageController();
-  final List<String> videoUrls = [
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
-    "https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4",
-  ];
-
-  final Map<int, VideoPlayerController> _controllers = {};
+  final PageController _pageController = PageController();
+  List<Map<String, dynamic>> _reels = [];
+  int _currentIndex = 0;
 
   @override
-  void dispose() {
-    for (var controller in _controllers.values) {
-      controller.dispose();
-    }
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fetchReels();
   }
 
-  Future<VideoPlayerController> _initializeController(int index) async {
-    if (_controllers.containsKey(index)) {
-      return _controllers[index]!;
-    }
+  Future<void> _fetchReels() async {
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('reels')
+            .orderBy('createdAt', descending: true)
+            .get();
 
-    final controller = VideoPlayerController.networkUrl(
-      Uri.parse(videoUrls[index]),
-    );
-    await controller.initialize();
-    controller.setLooping(true);
-
-    _controllers[index] = controller;
-    return controller;
-  }
-
-  void _onPageChanged(int index) {
-    for (var controller in _controllers.values) {
-      controller.pause();
-    }
-
-    _controllers[index]?.play();
+    setState(() {
+      _reels = snapshot.docs.map((e) => e.data()).toList();
+    });
   }
 
   @override
@@ -64,28 +40,26 @@ class _ReelsScreenState extends State<ReelsScreen> {
       extendBodyBehindAppBar: true,
       backgroundColor: ColorConstants.backgroundDark,
       appBar: const AppBarReels(),
-      body: PageView.builder(
-        controller: _pageController,
-        itemCount: videoUrls.length,
-        scrollDirection: Axis.vertical,
-        onPageChanged: _onPageChanged,
-        itemBuilder: (context, index) {
-          return FutureBuilder<VideoPlayerController>(
-            future: _initializeController(index),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return const Center(
-                  child: Icon(Icons.error, color: Colors.white),
-                );
-              } else {
-                return ReelsVideoPlayer(controller: snapshot.data!);
-              }
-            },
-          );
-        },
-      ),
+      body:
+          _reels.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : PageView.builder(
+                controller: _pageController,
+                scrollDirection: Axis.vertical,
+                itemCount: _reels.length,
+                onPageChanged: (index) {
+                  setState(() => _currentIndex = index);
+                },
+                itemBuilder: (context, index) {
+                  final reel = _reels[index];
+                  return ReelsVideoPlayer(
+                    videoUrl: reel['videoUrl'],
+                    caption: reel['caption'] ?? '',
+                    userName: reel['uid'] ?? '',
+                    isActive: index == _currentIndex,
+                  );
+                },
+              ),
     );
   }
 }

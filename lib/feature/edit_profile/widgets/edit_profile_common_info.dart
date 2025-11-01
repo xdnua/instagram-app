@@ -2,99 +2,237 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:instagram_app/base/dependency/app_service.dart';
 import 'package:instagram_app/constants/colors.dart';
-import 'package:instagram_app/feature/profile/models/user.dart';
-import 'package:instagram_app/shared/build/gen_l10n/app_localizations.dart';
-import 'package:instagram_app/shared/widgets/text/app_text_style.dart';
+import 'package:instagram_app/feature/edit_profile/providers/EditProfileFormNotifier.dart';
+import 'package:instagram_app/shared/providers/user_provider.dart';
 
-class EditProfileCommonInfo extends ConsumerWidget {
-  const EditProfileCommonInfo({super.key, required this.user});
-
-  final User user;
+class EditProfileCommonInfo extends ConsumerStatefulWidget {
+  const EditProfileCommonInfo({super.key});
 
   @override
-  Widget build(BuildContext context, ref) {
+  ConsumerState<EditProfileCommonInfo> createState() =>
+      _EditProfileCommonInfoState();
+}
+
+class _EditProfileCommonInfoState extends ConsumerState<EditProfileCommonInfo> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _usernameController;
+  late final TextEditingController _websiteController;
+  late final TextEditingController _bioController;
+  late final TextEditingController _phoneController;
+  String _gender = 'Nam';
+
+  final List<String> genderItems = ['Nam', 'Nữ', 'Khác'];
+
+  @override
+  void initState() {
+    super.initState();
+    final user = ref.read(userProvider);
+
+    _nameController = TextEditingController(text: user.name);
+    _usernameController = TextEditingController(text: user.username);
+    _websiteController = TextEditingController(text: user.website);
+    _bioController = TextEditingController(text: user.bio);
+    _phoneController = TextEditingController(text: user.phone);
+
+    // map user.gender to dropdown items
+    _gender = _mapGender(user.gender);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _usernameController.dispose();
+    _websiteController.dispose();
+    _bioController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  // map English gender to Vietnamese for dropdown
+  String _mapGender(String gender) {
+    switch (gender.toLowerCase()) {
+      case 'male':
+        return 'Nam';
+      case 'female':
+        return 'Nữ';
+      case 'other':
+        return 'Khác';
+      default:
+        return 'Nam'; // default value
+    }
+  }
+
+  // map back to API value
+  String _mapGenderToApi(String gender) {
+    switch (gender) {
+      case 'Nam':
+        return 'Male';
+      case 'Nữ':
+        return 'Female';
+      case 'Khác':
+        return 'Other';
+      default:
+        return 'Male';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final localization = ref.watch(AppService.localization);
+    final editNotifier = ref.read(editProfileFormProvider.notifier);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildRowItem(title: localization.name, value: user.name),
-        _buildRowItem(title: localization.username, value: user.username),
-        _buildRowItem(title: 'Website', value: user.website),
-        _buildRowItem(
-          title: localization.bio,
-          value: user.bio,
-          showDivider: false,
+        _buildTextField(
+          label: localization.name,
+          controller: _nameController,
+          onChanged: editNotifier.updateName,
         ),
-        Divider(color: ColorConstants.divider, height: 0.33),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: _buildSwitchProfession(localization),
+        _buildTextField(
+          label: localization.username,
+          controller: _usernameController,
+          onChanged: editNotifier.updateUsername,
+          readOnly: true,
         ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: _buildPrivateInformation(localization),
+        _buildTextField(
+          label: 'Website',
+          controller: _websiteController,
+          onChanged: editNotifier.updateWebsite,
         ),
-        _buildRowItem(title: localization.email, value: user.email),
-        _buildRowItem(title: localization.phone, value: user.phone),
-        _buildRowItem(title: localization.gender, value: user.gender),
+        _buildTextField(
+          label: localization.bio,
+          controller: _bioController,
+          onChanged: editNotifier.updateBio,
+          maxLines: 3,
+        ),
         const SizedBox(height: 16),
+        _buildDropdownField(
+          label: localization.gender,
+          value: _gender,
+          items: genderItems,
+          onChanged: (val) {
+            if (val != null) {
+              setState(() => _gender = val);
+              editNotifier.updateGender(_mapGenderToApi(val));
+            }
+          },
+        ),
+        _buildTextField(
+          label: localization.phone,
+          controller: _phoneController,
+          onChanged: editNotifier.updatePhone,
+          keyboardType: TextInputType.phone,
+        ),
+        _buildTextField(
+          label: localization.email,
+          controller: TextEditingController(
+            text: ref.read(userProvider).email,
+          ), // read-only
+          readOnly: true,
+        ),
+        const SizedBox(height: 24),
       ],
     );
   }
 
-  Widget _buildPrivateInformation(AppLocalizations localization) {
-    return Text(
-      localization.privateInfo,
-      style: AppTextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-    );
-  }
-
-  Widget _buildSwitchProfession(AppLocalizations localization) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      child: Text(
-        localization.switchAccount,
-        style: AppTextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.normal,
-          color: ColorConstants.radioActive,
-        ),
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    void Function(String)? onChanged,
+    bool readOnly = false,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+          ),
+          const SizedBox(height: 4),
+          TextFormField(
+            controller: controller,
+            readOnly: readOnly,
+            onChanged: onChanged,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            style: const TextStyle(fontSize: 16),
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: ColorConstants.divider),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: ColorConstants.divider),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: ColorConstants.radioActive),
+              ),
+              fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
+              filled: readOnly,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildRowItem({
-    required String title,
-    required String? value,
-    bool showDivider = true,
+  Widget _buildDropdownField({
+    required String label,
+    required String value,
+    required List<String> items,
+    required void Function(String?) onChanged,
   }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 96,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 15, 0, 15),
-            child: Text(title),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
           ),
-        ),
-        Expanded(
-          flex: 279,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 15, 16, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(value ?? title, style: AppTextStyle(fontSize: 16)),
-                const SizedBox(height: 15),
-                if (showDivider)
-                  const Divider(color: ColorConstants.divider, height: 0.33),
-              ],
+          const SizedBox(height: 4),
+          DropdownButtonFormField<String>(
+            initialValue: items.contains(value) ? value : null,
+            items:
+                items
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+            onChanged: onChanged,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: ColorConstants.divider),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: ColorConstants.divider),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: ColorConstants.radioActive),
+              ),
+              filled: true,
+              fillColor: Colors.white,
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

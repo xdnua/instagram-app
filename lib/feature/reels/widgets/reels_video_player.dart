@@ -1,84 +1,110 @@
 import 'package:flutter/material.dart';
+import 'package:chewie/chewie.dart';
 import 'package:video_player/video_player.dart';
 
 class ReelsVideoPlayer extends StatefulWidget {
-  const ReelsVideoPlayer({super.key, required this.controller});
+  const ReelsVideoPlayer({
+    super.key,
+    required this.videoUrl,
+    required this.caption,
+    required this.userName,
+    required this.isActive,
+  });
 
-  final VideoPlayerController controller;
+  final String videoUrl;
+  final String caption;
+  final String userName;
+  final bool isActive;
 
   @override
   State<ReelsVideoPlayer> createState() => _ReelsVideoPlayerState();
 }
 
 class _ReelsVideoPlayerState extends State<ReelsVideoPlayer> {
-  bool _showOverlay = false;
+  late VideoPlayerController _videoController;
+  ChewieController? _chewieController;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(() {
-      if (mounted) {
-        setState(() {}); // Cập nhật UI khi video thay đổi trạng thái
-      }
+    _initializePlayer();
+  }
+
+  Future<void> _initializePlayer() async {
+    _videoController = VideoPlayerController.networkUrl(
+      Uri.parse(widget.videoUrl),
+    );
+    await _videoController.initialize();
+
+    _chewieController = ChewieController(
+      videoPlayerController: _videoController,
+      autoPlay: widget.isActive,
+      looping: true,
+      showControls: false,
+      aspectRatio: _videoController.value.aspectRatio,
+    );
+
+    setState(() {
+      _isInitialized = true;
     });
   }
 
-  void _togglePlayPause() {
-    widget.controller.value.isPlaying
-        ? widget.controller.pause()
-        : widget.controller.play();
-    setState(() {
-      _showOverlay = !_showOverlay; // Hiện/ẩn overlay khi nhấn vào video
-    });
+  @override
+  void didUpdateWidget(covariant ReelsVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive != oldWidget.isActive) {
+      if (widget.isActive) {
+        _videoController.play();
+      } else {
+        _videoController.pause();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _videoController.dispose();
+    _chewieController?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Video Player
-        GestureDetector(
-          onTap: _togglePlayPause,
-          child: Center(
-            child:
-                widget.controller.value.isInitialized
-                    ? AspectRatio(
-                      aspectRatio: widget.controller.value.aspectRatio,
-                      child: VideoPlayer(widget.controller),
-                    )
-                    : const CircularProgressIndicator(),
-          ),
-        ),
+        if (_isInitialized && _chewieController != null)
+          Chewie(controller: _chewieController!)
+        else
+          const Center(child: CircularProgressIndicator()),
 
-        // Overlay Play/Pause Icon (hiển thị mượt hơn với AnimatedOpacity)
-        AnimatedOpacity(
-          opacity: _showOverlay ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 300),
-          child: Center(
-            child: ValueListenableBuilder(
-              valueListenable: widget.controller,
-              builder: (context, VideoPlayerValue value, _) {
-                return Icon(
-                  value.isPlaying
-                      ? Icons.pause_circle_filled
-                      : Icons.play_circle_fill,
-                  color: Colors.white,
-                  size: 80,
-                );
-              },
-            ),
-          ),
-        ),
-
-        // Like, Comment, Share buttons
-        const Positioned(bottom: 50, right: 20, child: _ActionButtons()),
-
-        // Mute Button
+        // Caption + username
         Positioned(
-          bottom: 50,
-          left: 20,
-          child: _MuteButton(controller: widget.controller),
+          bottom: 60,
+          left: 16,
+          right: 100,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '@${widget.userName}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                widget.caption,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+              ),
+            ],
+          ),
         ),
+
+        // Action buttons
+        const Positioned(bottom: 50, right: 20, child: _ActionButtons()),
       ],
     );
   }
@@ -90,46 +116,22 @@ class _ActionButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          icon: const Icon(Icons.favorite, color: Colors.pink, size: 40),
+          icon: const Icon(Icons.favorite, color: Colors.pink, size: 38),
           onPressed: () {},
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         IconButton(
           icon: const Icon(Icons.comment, color: Colors.white, size: 35),
           onPressed: () {},
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         IconButton(
           icon: const Icon(Icons.share, color: Colors.white, size: 35),
           onPressed: () {},
         ),
       ],
-    );
-  }
-}
-
-class _MuteButton extends StatelessWidget {
-  const _MuteButton({required this.controller});
-
-  final VideoPlayerController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: controller,
-      builder: (context, VideoPlayerValue value, _) {
-        return IconButton(
-          icon: Icon(
-            value.volume == 0 ? Icons.volume_off : Icons.volume_up,
-            color: Colors.white,
-            size: 35,
-          ),
-          onPressed: () => controller.setVolume(value.volume == 0 ? 1 : 0),
-        );
-      },
     );
   }
 }

@@ -27,6 +27,7 @@ class RouteInput {
 
   // reels
   RouteInput.reels() : routeName = RouteName.reels;
+  RouteInput.uploadReel() : routeName = RouteName.uploadReel;
 
   // edit profile
   RouteInput.editProfile() : routeName = RouteName.editProfile;

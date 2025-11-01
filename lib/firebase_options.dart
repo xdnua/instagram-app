@@ -17,7 +17,10 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -46,30 +49,20 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDyR9XTBMi-ezzIjmCWZxlQRmYMXkAH-24',
-    appId: '1:536668195309:web:d19ba4cbf571b315cc3fe4',
-    messagingSenderId: '536668195309',
-    projectId: 'instagram-app-d0c1a',
-    authDomain: 'instagram-app-d0c1a.firebaseapp.com',
-    storageBucket: 'instagram-app-d0c1a.firebasestorage.app',
-    measurementId: 'G-97KVH4YRPD',
-  );
-
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyB6heUqB3ZlbDDFrTlMTZbrn-1KdcbyGq8',
-    appId: '1:536668195309:android:5ece6512deb5db24cc3fe4',
-    messagingSenderId: '536668195309',
-    projectId: 'instagram-app-d0c1a',
-    storageBucket: 'instagram-app-d0c1a.firebasestorage.app',
+    apiKey: 'AIzaSyA9X4HFsseeEQT1ElH5GEHzOsjHF94NZbo',
+    appId: '1:619890234057:android:8e2e2544970e69e0fb3318',
+    messagingSenderId: '619890234057',
+    projectId: 'instagram-app-2f85d',
+    storageBucket: 'instagram-app-2f85d.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCf9GW_F2p4e_QBLuNwLHxuqP9yHEHSvn8',
-    appId: '1:536668195309:ios:bd2c68c9b2522b14cc3fe4',
-    messagingSenderId: '536668195309',
-    projectId: 'instagram-app-d0c1a',
-    storageBucket: 'instagram-app-d0c1a.firebasestorage.app',
+    apiKey: 'AIzaSyA4oVVsCoynT1c91kcFWINOFwi45Gjq3Nk',
+    appId: '1:619890234057:ios:678880b275f9593efb3318',
+    messagingSenderId: '619890234057',
+    projectId: 'instagram-app-2f85d',
+    storageBucket: 'instagram-app-2f85d.firebasestorage.app',
     iosBundleId: 'com.example.instagramApp',
   );
 }
